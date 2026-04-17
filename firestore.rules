@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: products
+    // Document ID: auto-generated or custom id string
+    // Fields:
+    //   - id: string (required)
+    //   - type: string (required, 'static', 'ps', 'figma')
+    //   - title: string (required)
+    //   - cover: string (optional)
+    //   - pages: number (optional)
+    //   - theme: string (required)
+    //   - tech: list of strings (optional)
+    //   - price: string (optional)
+    //   - description: string (optional)
+    //   - status: string (required, 'selling', 'sold_out')
+    //   - isHot: boolean (optional)
+    //   - hasInteraction: boolean (optional)
+    //   - soldTo: list of map (optional)
+    //   - createdAt: string (required)
+    //   - updatedAt: string (optional)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+             (request.auth.token.email == "lanu2617@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+             ((request.auth.token.email == "lanu2617@gmail.com" && request.auth.token.email_verified == true) || 
+              (exists(/databases/$(database)/documents/settings/roles) && 
+               request.auth.token.email in get(/databases/$(database)/documents/settings/roles).data.adminEmails));
+    }
+
+    // Validation
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validProduct(data) {
+      // Very loose check just to ensure it has basic fields and we're an admin
+      return isAdmin() &&
+             data.keys().hasAll(['id', 'type', 'title', 'theme', 'status']) &&
+             data.id is string &&
+             data.type is string &&
+             data.title is string &&
+             data.theme is string &&
+             data.status in ['selling', 'sold_out'];
+    }
+
+    // Rules
+    match /products/{productId} {
+      allow read: if true; // Everyone can read products!
+      allow create: if isAdmin() && validProduct(request.resource.data);
+      allow update: if isAdmin() && validProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Keep settings admin locked just in case
+    match /settings/{docId} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+    
+    // Explicit deny for any other document
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

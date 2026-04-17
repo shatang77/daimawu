@@ -1,0 +1,114 @@
+{
+  "products": [
+    {
+      "idx": 0,
+      "id": "0012",
+      "type": "static",
+      "title": "杭州旅游主题网页",
+      "cover": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAs7BvwDASIAAhEBAxEB/8QAHgABAAAHAQEBAAAAAAAAAAAAAAIDBAUGBwgBCQr/xABsEAABAwMDAwQGBQcHBwYJARkBAAIDBAURBiEHEjEITRFRkEFhcYGRCBMioQpSscHwFjNSlNHhCSQzQ1ZicnO0wVdiZHWyJyk0NUVkdYSEo8ElNllL01aDldPxCReV4v/EABwBAQACAwEBAQAAAAAAAAAAAAABBAIDBQYHCP/EAEQRAAEEAAQDBgQDBgUEAAYDAAEAAgMRBBIhBTFBURNhcYGhFCKRscHR8DJS4QYjM1Ji8RQScoKSorLCJUNEY4OSw/H/2gAMAwEAAhEDEQA/APqmiIgCIiAIiIAiIgCIiAIiIAiIgAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgCIiAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgAIiIAiIgCIiAIiIAiIgAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgAIiIAiIgCIiAIiIAiIgAIiIAiIgAIiIAiIgCIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgAIiIAiIgCIiAIiIAiIgAIiIAiIgAIiIAiIgCIiAIiIf/2Q==",
+      "pages": 5,
+      "theme": "城市",
+      "tech": ["HTML", "CSS", "JavaScript"],
+      "price": null,
+      "description": "功能：轮播图、布局、超链接、CSS样式、布局、语义化标签、图文混排、悬停效果、平滑滚动等等\n共5个页面，可互相跳转\nDW，VScode，Hbuilder等均可导入编辑源码，建议用浏览器预览\n文件代码注释素材齐全",
+      "status": "selling",
+      "isHot": true,
+      "hasInteraction": null,
+      "createdAt": "2026-04-17T08:15:18.011Z",
+      "updatedAt": "2026-04-17T10:00:20.851Z",
+      "images": "[]",
+      "soldTo": [
+        {"id": "55xexo5", "date": "2026-01-03", "note": "realmm", "school": "上海理工大学"},
+        {"id": "n6769m6", "date": "2026-01-05", "note": "波兰刻苦的刀鱼", "school": "浙江万里学院"},
+        {"id": "mlitkgz", "date": "2026-01-16", "note": "a芝士碎", "school": "唐山工业职业技术大学"},
+        {"id": "52m7r77", "date": "2026-01-07", "note": "李清照OvO", "school": "重庆应用技术职业学院"},
+        {"id": "qea1pgx", "date": "2026-01-13", "note": "x***6", "school": "郴州职业技术学院"}
+      ]
+    },
+    {
+      "idx": 1,
+      "id": "0013",
+      "type": "static",
+      "title": "宠物主题网站",
+      "cover": "",
+      "pages": 5,
+      "theme": "宠物",
+      "tech": ["HTML", "CSS", "JavaScript"],
+      "price": null,
+      "description": "功能：轮播图、布局、CSS样式、可替换图文、导航栏、语义化标签、悬停效果、图文混排、logo、内容、版权页脚等等\nDW，vscode，HBuilder等均可导入编辑源码，建议用浏览器预览\n支持自行替换图文，文件代码素材齐全",
+      "status": "selling",
+      "isHot": true,
+      "hasInteraction": null,
+      "soldTo": [
+        {"id": "uri1iva", "date": "2026-01-03", "note": "是3333_", "school": "江西生物科技职业学院"},
+        {"id": "psz4x1d", "date": "2026-01-06", "note": "椰梨效应", "school": "山东传媒职业学院"},
+        {"id": "tc34ibh", "date": "2026-01-07", "note": "北美洲有为蒜苗", "school": "湖南工学院"},
+        {"id": "pa9uy7n", "date": "2026-01-07", "note": "喵喵子王", "school": "燕京职业技术学院"},
+        {"id": "kwfi0dg", "date": "2026-01-07", "note": "神楽坂千夏", "school": "厦门软件职业技术学院"},
+        {"id": "1nrlyt6", "date": "2026-01-08", "note": "x***6", "school": "重庆移通学院"},
+        {"id": "o4mo1q2", "date": "2026-01-09", "note": "小川11", "school": "宜宾学院"},
+        {"id": "9u2olhi", "date": "2026-01-21", "note": "喵喵喵喵拒收圆通", "school": "三峡大学科技学院"},
+        {"id": "blu23s7", "date": "2026-04-02", "note": "机智的膨胀神券", "school": "南昌航空大学"},
+        {"id": "6jyk4s6", "date": "2026-04-03", "note": "王家小鑫", "school": "信仰艺术"},
+        {"id": "4wdwhvg", "date": "2026-04-08", "note": "陈天睡大觉", "school": "西安培华"},
+        {"id": "yzngtaa", "date": "2026-04-10", "note": "爱吃酥肉萝卜...", "school": "大连理工大学城市学院"},
+        {"id": "ghnmu6v", "date": "2026-04-15", "note": "cjjj", "school": "湖北大学"},
+        {"id": "8q2sxwj", "date": "2026-04-17", "note": "x***2", "school": "珠海科技学院"}
+      ],
+      "createdAt": "2026-04-17T09:54:55.147Z",
+      "updatedAt": "2026-04-17T10:11:48.193Z",
+      "images": []
+    },
+    {
+      "idx": 2,
+      "id": "0014",
+      "type": "static",
+      "title": "咖啡主题网站",
+      "cover": "",
+      "pages": 6,
+      "theme": "日常",
+      "tech": ["HTML", "CSS", "JavaScript"],
+      "price": null,
+      "description": "功能：轮播图、布局、CSS样式、可替换图文、导航栏、语义化标签、悬停效果、图文混排、logo、内容、版权页脚等等\nDW，vscode，HBuilder等均可导入编辑源码，建议用浏览器预览\n支持自行替换图文，文件代码素材齐全",
+      "status": "selling",
+      "isHot": true,
+      "hasInteraction": null,
+      "soldTo": [
+        {"id": "y3kdgdj", "date": "2026-01-04", "note": "肆意舟横", "school": "南通理工学院"},
+        {"id": "o1vr1mx", "date": "2026-01-05", "note": "x***4", "school": "潍坊学院"},
+        {"id": "vf1maz5", "date": "2026-01-13", "note": "x***7", "school": "通辽职业学院"},
+        {"id": "bzrcjgq", "date": "2026-03-18", "note": "x***9", "school": "南昌航空大学"}
+      ],
+      "createdAt": "2026-04-17T10:15:49.984Z",
+      "updatedAt": "2026-04-17T10:18:19.629Z",
+      "images": []
+    },
+    {
+      "idx": 3,
+      "id": "0015",
+      "title": "疯狂动物城2主题",
+      "cover": "",
+      "pages": 5,
+      "theme": "动漫影视",
+      "tech": ["HTML", "CSS", "JavaScript"],
+      "price": null,
+      "description": "功能：轮播图、布局、CSS样式、可替换图文、导航栏、语义化标签、悬停效果、图文混排、logo、内容、版权页脚等等\nDW，vscode，HBuilder等均可导入编辑源码，建议用浏览器预览\n支持自行替换图文，文件代码素材齐全",
+      "status": "selling",
+      "isHot": true,
+      "hasInteraction": null,
+      "soldTo": [
+        {"id": "m4biqqs", "date": "2026-01-03", "note": "洛米萝卜", "school": "西安思源"},
+        {"id": "k9mb5c0", "date": "2026-01-04", "note": "严好香老婆", "school": "上海理工大学"},
+        {"id": "f79r20x", "date": "2026-01-06", "note": "x***8", "school": "通辽职业学院"},
+        {"id": "rf78m29", "date": "2026-01-12", "note": "精灵来攻城", "school": "温州理工学院"},
+        {"id": "oh2dncr", "date": "2026-01-14", "note": "长风送秋雁", "school": "湖南工业大学"}
+      ],
+      "createdAt": "2026-04-17T10:20:10.255Z",
+      "updatedAt": "2026-04-17T10:23:31.793Z",
+      "images": []
+    }
+  ],
+  "settings": {
+    "admin_emails": ["lanu2617@gmail.com"]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A web template product sold in the store.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["static", "ps", "figma"] },
+        "title": { "type": "string" },
+        "cover": { "type": "string" },
+        "pages": { "type": "number" },
+        "theme": { "type": "string" },
+        "tech": { "type": "array", "items": { "type": "string" } },
+        "price": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["selling", "sold_out"] },
+        "isHot": { "type": "boolean" },
+        "hasInteraction": { "type": "boolean" },
+        "soldTo": { "type": "array", "items": { "$ref": "#/entities/SoldRecord" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "title", "theme", "status", "createdAt"]
+    },
+    "SoldRecord": {
+      "title": "SoldRecord",
+      "description": "A record of a school that bought the template.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "school": { "type": "string" },
+        "date": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["id", "school"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Admin settings for the site, like the admin's custom password if we still support it, though Firebase Auth is primary.",
+      "type": "object",
+      "properties": {
+        "adminPassword": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "The products collection"
+    },
+    "settings/admin": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Admin settings document storing custom admin password hash/plaintext"
+    }
+  }
+}
