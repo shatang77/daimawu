@@ -25,14 +25,15 @@ export interface Product {
   type: ProductType;
   title: string;
   cover: string;
-  images: string[];
+  images?: string[];
   pages: number;
   theme: string;
   tech: string[];
+  price: string;
   description: string;
   status: 'selling' | 'sold_out';
   isHot: boolean;
-  hasInteraction: boolean;
+  hasInteraction?: boolean;
   baseInventory?: number;
   soldTo: SoldRecord[];
   createdAt: string;
@@ -41,19 +42,32 @@ export interface Product {
 
 interface AppState {
   products: Product[];
-  isLoading: boolean;
+  adminEmails: string[];
   isAuthReady: boolean;
   isAdminLoggedIn: boolean;
+  isSuperAdmin: boolean;
   globalError: string | null;
   isOnline: boolean;
+  isLoading: boolean;
+  dbStarted: boolean; // 改用成员变量代替外部 let
   initDB: () => Promise<void>;
-  _fetchProducts: () => Promise<void>;
+  loginAdmin: () => Promise<boolean>;
+  loginManagerWithEmail: (e: string, p: string) => Promise<boolean>;
+  loginAdminWithRedirect: () => Promise<void>;
+  logoutAdmin: () => Promise<void>;
+  fetchAdminEmails: () => Promise<void>;
+  updateAdminEmails: (emails: string[]) => Promise<void>;
   addProduct: (product: Omit<Product, 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  addSoldRecord: (productId: string, record: Omit<SoldRecord, 'id'>) => Promise<void>;
+  updateSoldRecord: (productId: string, recordId: string, updates: Partial<SoldRecord>) => Promise<void>;
+  deleteSoldRecord: (productId: string, recordId: string) => Promise<void>;
+  _fetchProducts: () => Promise<void>;
+  _handleUser: (user: any) => Promise<void>;
+  setGlobalError: (error: string | null) => void;
 }
 
-// 替换从第 72 行开始到文件末尾的所有内容
 export const useStore = create<AppState>((set, get) => ({
   products: [],
   adminEmails: [],
@@ -63,21 +77,37 @@ export const useStore = create<AppState>((set, get) => ({
   globalError: null,
   isOnline: true,
   isLoading: true,
+  dbStarted: false,
 
   setGlobalError: (error) => set({ globalError: error }),
 
   initDB: async () => {
-    if (isDbInitialized) return;
-    isDbInitialized = true;
-    await get()._fetchProducts();
-    await get().fetchAdminEmails();
+    if (get().dbStarted) return;
+    set({ dbStarted: true });
+
+    try {
+      // 串行等待，确保稳定
+      await get()._fetchProducts();
+      await get().fetchAdminEmails();
+    } catch (e) {
+      console.error("Init DB failed:", e);
+    }
+    
     const savedUser = localStorage.getItem('local-admin-user');
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
-        set({ isAdminLoggedIn: true, isSuperAdmin: user.email === 'lanu2617@gmail.com', isAuthReady: true });
-      } catch { set({ isAuthReady: true }); }
-    } else { set({ isAuthReady: true }); }
+        set({ 
+          isAdminLoggedIn: true, 
+          isSuperAdmin: user.email === 'lanu2617@gmail.com', 
+          isAuthReady: true 
+        });
+      } catch {
+        set({ isAuthReady: true });
+      }
+    } else {
+      set({ isAuthReady: true });
+    }
   },
 
   _handleUser: async (user: any) => {
@@ -86,8 +116,15 @@ export const useStore = create<AppState>((set, get) => ({
       localStorage.removeItem('local-admin-user');
       return;
     }
-    set({ isAdminLoggedIn: true, isSuperAdmin: user.email === 'lanu2617@gmail.com', isAuthReady: true });
+
+    const isSuper = user.email === 'lanu2617@gmail.com';
+    set({ 
+      isAdminLoggedIn: true, 
+      isSuperAdmin: isSuper, 
+      isAuthReady: true 
+    });
     localStorage.setItem('local-admin-user', JSON.stringify(user));
+    await get().fetchAdminEmails();
   },
 
   _fetchProducts: async () => {
@@ -97,8 +134,11 @@ export const useStore = create<AppState>((set, get) => ({
       if (error) throw error;
       set({ products: (data || []) as unknown as Product[], globalError: null, isOnline: true });
     } catch (err: any) {
+      console.error("Fetch products error:", err);
       set({ globalError: `数据获取失败`, isOnline: false });
-    } finally { set({ isLoading: false }); }
+    } finally {
+      set({ isLoading: false });
+    }
   },
 
   fetchAdminEmails: async () => {},
@@ -109,6 +149,7 @@ export const useStore = create<AppState>((set, get) => ({
     await get()._handleUser(data.user);
     return true;
   },
+
   loginAdmin: async () => { throw new Error("已禁用"); },
   loginAdminWithRedirect: async () => {},
   logoutAdmin: async () => {
@@ -117,7 +158,12 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addProduct: async (product) => {
-    const newProduct = { ...product, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), soldTo: product.soldTo || [] };
+    const newProduct = {
+      ...product,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      soldTo: product.soldTo || [],
+    };
     const { error } = await supabase.from('products').insert([newProduct]);
     if (error) throw error;
     await get()._fetchProducts();
@@ -138,7 +184,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   addSoldRecord: async (productId, record) => {
     const p = get().products.find(x => x.id === productId);
-    if (!p) throw new Error("同步失败：未找到作品");
+    if (!p) throw new Error("未找到作品");
     const newRecord = { ...record, id: Math.random().toString(36).substring(2, 9) };
     const updatedSoldTo = [...(p.soldTo || []), newRecord];
     const { error } = await supabase.from('products').update({ soldTo: updatedSoldTo, updatedAt: new Date().toISOString() }).eq('id', productId);
