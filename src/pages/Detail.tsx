@@ -188,7 +188,7 @@ export default function Detail() {
           <div className="rounded-[2rem] p-6 shadow-sm border bg-[#FFF4F6] border-pink-100">
               <h3 className="text-rose-600 font-extrabold flex items-center gap-2 mb-4 text-base">
                 <AlertTriangle size={20} className="stroke-[3]" />
-                以下学校已购买，请勿重复下单哦
+                以下学校已购买
               </h3>
               <div className="space-y-2">
                 {product.soldTo.map(s => (
