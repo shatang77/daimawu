@@ -41,9 +41,11 @@ export interface Product {
 
 interface AppState {
   products: Product[];
-  isAdminLoggedIn: boolean;
-  isAuthReady: boolean;
   isLoading: boolean;
+  isAuthReady: boolean;
+  isAdminLoggedIn: boolean;
+  globalError: string | null;
+  isOnline: boolean;
   initDB: () => Promise<void>;
   _fetchProducts: () => Promise<void>;
   addProduct: (product: Omit<Product, 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -53,9 +55,11 @@ interface AppState {
 
 export const useStore = create<AppState>()((set, get) => ({
   products: [],
-  isAdminLoggedIn: false,
-  isAuthReady: false,
   isLoading: true,
+  isAuthReady: false,
+  isAdminLoggedIn: false,
+  globalError: null,
+  isOnline: true,
 
   initDB: async () => {
     await get()._fetchProducts();
@@ -68,9 +72,12 @@ export const useStore = create<AppState>()((set, get) => ({
     try {
       const { data, error } = await supabase.from('products').select('*').order('id', { ascending: false });
       if (error) throw error;
-      set({ products: (data as any[]) || [] });
-    } catch (err) {
+      // 🚨 核心修复：获取成功后清除错误并设为在线
+      set({ products: (data as any[]) || [], globalError: null, isOnline: true });
+    } catch (err: any) {
       console.error("Fetch failed:", err);
+      // 获取失败时显示错误
+      set({ globalError: `数据拉取失败: ${err.message}`, isOnline: false });
     } finally {
       set({ isLoading: false });
     }
