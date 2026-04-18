@@ -69,28 +69,7 @@ interface AppState {
 
 let isDbInitialized = false;
 
-export const useStore = create<AppState>()((set, get) => {
-  // A helper for backend API calls - bypassed the local network issues
-  const apiCall = async (method: string, path: string, body?: any) => {
-    try {
-      const res = await fetch(path, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '请求失败');
-      return data;
-    } catch (err: any) {
-      // If the local backend is reachable but failing, it's better than direct DB failure
-      if (err.message.includes('Failed to fetch')) {
-        throw new Error('无法连接到控制台后台，请尝试刷新页面。');
-      }
-      throw err;
-    }
-  };
-
-  return {
+export const useStore = create<AppState>()((set, get) => ({
   products: [],
   adminEmails: [],
   isAuthReady: false,
@@ -105,12 +84,8 @@ export const useStore = create<AppState>()((set, get) => {
   initDB: async () => {
     if (isDbInitialized) return;
     isDbInitialized = true;
-
-    // Load initial products and settings
     get()._fetchProducts();
     get().fetchAdminEmails();
-    
-    // Check local session (minimal)
     const savedUser = localStorage.getItem('local-admin-user');
     if (savedUser) {
       const user = JSON.parse(savedUser);
@@ -126,55 +101,40 @@ export const useStore = create<AppState>()((set, get) => {
       localStorage.removeItem('local-admin-user');
       return;
     }
-
     const isSuper = user.email === 'lanu2617@gmail.com';
-    set({ 
-      isAdminLoggedIn: true, 
-      isSuperAdmin: isSuper, 
-      isAuthReady: true 
-    });
+    set({ isAdminLoggedIn: true, isSuperAdmin: isSuper, isAuthReady: true });
     localStorage.setItem('local-admin-user', JSON.stringify(user));
     get().fetchAdminEmails();
   },
 
- async _fetchProducts() {
-  set({ isLoading: true });
-  try {
-    // 【修改处】：在这里明确排除掉 cover 字段（Base64太大了！）
-    // 这样查询会快几十倍，也不会超时了
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, title, type, pages, theme, tech, status, isHot, soldTo'); 
+  _fetchProducts: async () => {
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, title, type, pages, theme, tech, status, isHot, soldTo');
+      if (error) throw error;
+      set({ products: (data || []) as unknown as Product[], globalError: null, isOnline: true });
+    } catch (err: any) {
+      console.error("Fetch products encountered error:", err);
+      set({ globalError: `数据获取失败`, isOnline: false });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-    if (error) throw error;
-    set({ products: data || [] });
-  } catch (err) {
-    console.error('Fetch error:', err);
-  } finally {
-    set({ isLoading: false });
-  }
-}
-
-  fetchAdminEmails: async () => {}, // TODO: Implement admin email logic with Supabase if needed
-
-  updateAdminEmails: async (emails: string[]) => {}, // TODO
+  fetchAdminEmails: async () => {},
+  updateAdminEmails: async (emails: string[]) => {},
 
   loginManagerWithEmail: async (email: string, password: string) => {
-    // Basic auth handled by Supabase, this is a placeholder for the logic in the app
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await get()._handleUser(data.user);
     return true;
   },
 
-  loginAdmin: async () => {
-    throw new Error("OAuth 登录目前在本地稳定版中已禁用。请使用管理员账号登录。");
-  },
-
-  loginAdminWithRedirect: async () => {
-    // Disabled in local mode for stability
-  },
-
+  loginAdmin: async () => { throw new Error("OAuth 登录已禁用。"); },
+  loginAdminWithRedirect: async () => {},
   logoutAdmin: async () => {
     set({ isAdminLoggedIn: false, isSuperAdmin: false });
     localStorage.removeItem('local-admin-user');
@@ -193,10 +153,8 @@ export const useStore = create<AppState>()((set, get) => {
   },
 
   updateProduct: async (id, updates) => {
-    // 移除不可更改或危险的字段
     const { id: _, createdAt: __, ...cleanUpdates } = updates as any;
     const finalData = { ...cleanUpdates, updatedAt: new Date().toISOString() };
-    
     const { error } = await supabase.from('products').update(finalData).eq('id', id);
     if (error) throw error;
     get()._fetchProducts();
@@ -210,7 +168,7 @@ export const useStore = create<AppState>()((set, get) => {
 
   addSoldRecord: async (productId, record) => {
     const p = get().products.find(x => x.id === productId);
-    if (!p) throw new Error("同步失败：本地未找到该作品，请刷新页面后重试。");
+    if (!p) throw new Error("同步失败：未找到作品");
     const newRecord = { ...record, id: Math.random().toString(36).substring(2, 9) };
     const updatedSoldTo = [...(p.soldTo || []), newRecord];
     await get().updateProduct(productId, { soldTo: updatedSoldTo });
@@ -218,16 +176,15 @@ export const useStore = create<AppState>()((set, get) => {
 
   updateSoldRecord: async (productId, recordId, updates) => {
     const p = get().products.find(x => x.id === productId);
-    if (!p) throw new Error("同步失败：本地未找到该作品，请刷新页面后重试。");
+    if (!p) throw new Error("同步失败：未找到作品");
     const updatedSoldTo = (p.soldTo || []).map(r => r.id === recordId ? { ...r, ...updates } : r);
     await get().updateProduct(productId, { soldTo: updatedSoldTo });
   },
 
   deleteSoldRecord: async (productId, recordId) => {
     const p = get().products.find(x => x.id === productId);
-    if (!p) throw new Error("同步失败：本地未找到该作品，请刷新页面后重试。");
+    if (!p) throw new Error("同步失败：未找到作品");
     const updatedSoldTo = (p.soldTo || []).filter((s) => s.id !== recordId);
     await get().updateProduct(productId, { soldTo: updatedSoldTo });
   }
-  };
-});
+}));
