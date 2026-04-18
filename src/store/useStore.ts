@@ -107,12 +107,14 @@ export const useStore = create<AppState>()((set, get) => ({
     get().fetchAdminEmails();
   },
 
-  _fetchProducts: async () => {
+_fetchProducts: async () => {
     set({ isLoading: true });
     try {
+      // 🚨 补全了所有必要的预览字段，包括 cover 和 images，以及状态标志
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, type, pages, theme, tech, status, isHot, soldTo');
+        .select('id, title, type, cover, images, pages, theme, tech, status, isHot, soldTo, baseInventory');
+
       if (error) throw error;
       set({ products: (data || []) as unknown as Product[], globalError: null, isOnline: true });
     } catch (err: any) {
@@ -121,7 +123,7 @@ export const useStore = create<AppState>()((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
-  },
+},
 
   fetchAdminEmails: async () => {},
   updateAdminEmails: async (emails: string[]) => {},
