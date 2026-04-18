@@ -8,6 +8,7 @@ export default function ProductSold() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  // 使用稳定的选择器，避免返回新对象，从根本上解决无限循环报错
   const products = useStore(state => state.products);
   const addSoldRecord = useStore(state => state.addSoldRecord);
   const deleteSoldRecord = useStore(state => state.deleteSoldRecord);
@@ -15,7 +16,7 @@ export default function ProductSold() {
 
   const product = React.useMemo(() => products.find(p => p.id === id), [products, id]);
 
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [school, setSchool] = useState('');
   const [note, setNote] = useState('');
 
@@ -26,47 +27,60 @@ export default function ProductSold() {
   // 历史学校自动补全建议
   const allSoldRecords = React.useMemo(() => products.flatMap(p => p.soldTo || []), [products]);
   const suggestions = React.useMemo(() => {
-    if (!school) return [];
+    const trimmedSchool = school.trim();
+    if (!trimmedSchool) return [];
     const uniqueSchools = Array.from(new Set<string>(allSoldRecords.map(r => r.school)));
-    return uniqueSchools.filter(s => s.toLowerCase().includes(school.toLowerCase()) && s !== school).slice(0, 5);
+    return uniqueSchools.filter(s => s.toLowerCase().includes(trimmedSchool.toLowerCase()) && s !== trimmedSchool).slice(0, 5);
   }, [allSoldRecords, school]);
 
   if (!product) {
-    return <div className="p-8 text-center text-slate-500">找不到对应作品</div>;
+    return <div className="p-8 text-center text-slate-500 font-bold">作品编号 {id} 未找到</div>;
   }
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!school.trim()) return;
+    const trimmedSchool = school.trim();
+    if (!trimmedSchool) return;
     
+    // 查重逻辑
     const currentSoldTo = product.soldTo || [];
-    if (currentSoldTo.some(s => s.school.trim() === school.trim())) {
-      alert(`⚠️ 警告：该学校【${school}】已经购买过本作品，根据防撞车规则，不能重复添加！`);
+    if (currentSoldTo.some(s => s.school.trim() === trimmedSchool)) {
+      alert(`⚠️ 警告：该学校【${trimmedSchool}】已经购买过本作品，根据防撞车规则，不能重复添加！`);
       return;
     }
 
     try {
-      await addSoldRecord(product.id, { school: school.trim(), date, note: note.trim() });
+      await addSoldRecord(product.id, { 
+        school: trimmedSchool, 
+        date: date || format(new Date(), 'yyyy-MM-dd'), 
+        note: note.trim() 
+      });
       setSchool('');
       setNote('');
-      // 成功提醒
+      
+      // 成功提醒 UI
       const toast = document.createElement('div');
-      toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-xl z-50 animate-in fade-in slide-in-from-bottom-4';
+      toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-6 transition-all duration-300';
       toast.innerText = '✅ 记录已成功录入库中';
       document.body.appendChild(toast);
       setTimeout(() => {
-        toast.classList.add('fade-out');
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, 20px)';
         setTimeout(() => toast.remove(), 500);
-      }, 2000);
+      }, 2500);
     } catch (err: any) {
-      console.error(err);
-      alert('❌ 录入失败：' + (err.message || '未知错误'));
+      console.error('Add Record Error:', err);
+      alert('❌ 录入失败：' + (err.message || '网络连接异常，请重试'));
     }
   };
 
-  const handleDelete = (sId: string, schoolName: string) => {
+  const handleDelete = async (sId: string, schoolName: string) => {
     if (window.confirm(`确定要删除学校【${schoolName}】的购买记录吗？查重库中将消失！`)) {
-      deleteSoldRecord(product.id, sId);
+      try {
+        await deleteSoldRecord(product.id, sId);
+      } catch (err: any) {
+        alert('删除失败: ' + err.message);
+      }
     }
   };
 
@@ -76,12 +90,12 @@ export default function ProductSold() {
   };
 
   const saveEditing = async () => {
-    if (!editForm.school?.trim()) return;
+    const trimmedEditSchool = editForm.school?.trim();
+    if (!trimmedEditSchool) return;
     
     const currentSoldTo = product.soldTo || [];
-    // Check duplication if changing school name
-    const isNewName = editForm.school.trim() !== currentSoldTo.find((s: SoldRecord)=>s.id===editingId)?.school?.trim();
-    if (isNewName && currentSoldTo.some(s => s.school.trim() === editForm.school?.trim() && s.id !== editingId)) {
+    const isNewName = trimmedEditSchool !== currentSoldTo.find((s: SoldRecord)=>s.id===editingId)?.school?.trim();
+    if (isNewName && currentSoldTo.some(s => s.school.trim() === trimmedEditSchool && s.id !== editingId)) {
         alert("此学校名已经在记录中了，不能重复！");
         return;
     }
@@ -198,7 +212,6 @@ export default function ProductSold() {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Using a reverse mapping so newest shows at top visually if wanted, but keep order stable */}
               {[...product.soldTo].reverse().map((s, index) => (
                 <div key={`${s.id}-${index}`} className="bg-white rounded-2xl p-5 shadow-[0_5px_15px_rgb(0,0,0,0.02)] border border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 transition-all">
                   
