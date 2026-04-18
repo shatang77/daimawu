@@ -137,19 +137,23 @@ export const useStore = create<AppState>()((set, get) => {
     get().fetchAdminEmails();
   },
 
-  _fetchProducts: async () => {
-    set({ isLoading: true }); // 开始加载
-    try {
-      const { data, error } = await supabase.from('products').select('*');
-      if (error) throw error;
-      set({ products: data as unknown as Product[], globalError: null, isOnline: true });
-    } catch (err: any) {
-      console.error("Fetch products encountered error:", err);
-      set({ globalError: `数据获取失败: ${err.message}`, isOnline: false });
-    } finally {
-      set({ isLoading: false }); // 结束加载
-    }
-  },
+ async _fetchProducts() {
+  set({ isLoading: true });
+  try {
+    // 【修改处】：在这里明确排除掉 cover 字段（Base64太大了！）
+    // 这样查询会快几十倍，也不会超时了
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, title, type, pages, theme, tech, status, isHot, soldTo'); 
+
+    if (error) throw error;
+    set({ products: data || [] });
+  } catch (err) {
+    console.error('Fetch error:', err);
+  } finally {
+    set({ isLoading: false });
+  }
+}
 
   fetchAdminEmails: async () => {}, // TODO: Implement admin email logic with Supabase if needed
 
