@@ -1,9 +1,8 @@
-// 路径：/src/pages/admin/ProductEdit.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore, Product, ProductType, getBaseInventory } from '../../store/useStore';
 import { supabase } from '../../lib/supabaseClient';
-import { ChevronLeft, Save, Upload, Image as ImageIcon, Plus, Loader2, X } from 'lucide-react';
+import { ChevronLeft, Save, Upload, Image as ImageIcon, Plus, X, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export default function ProductEdit() {
@@ -19,12 +18,11 @@ export default function ProductEdit() {
 
   const [formData, setFormData] = useState<Partial<Product>>({
     id: '', title: '', type: 'static', cover: '', images: [], pages: 1,
-    theme: '', tech: [], description: '', status: 'selling', isHot: false, soldTo: []
+    theme: '', tech: [], description: '', status: 'selling', isHot: false, 
+    hasInteraction: false, baseInventory: undefined, soldTo: []
   });
 
   const [techInput, setTechInput] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -32,161 +30,215 @@ export default function ProductEdit() {
     if (!isNew && id) {
       const p = products.find(x => x.id === id);
       if (p) setFormData(p);
-    } else if (isNew) {
+    } else if (isNew && products.length > 0) {
       const usedIds = products.map(p => parseInt(p.id, 10)).filter(n => !isNaN(n));
       const maxId = usedIds.length > 0 ? Math.max(...usedIds) : 9;
-      setFormData(prev => ({ ...prev, id: String(maxId + 1).padStart(4, '0') }));
+      setFormData(prev => ({ ...prev, id: prev.id || String(maxId + 1).padStart(4, '0') }));
     }
   }, [id, isNew, products]);
 
-  // 上传逻辑
   const uploadToStorage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
     const { error: uploadError } = await supabase.storage.from('covers').upload(fileName, file);
     if (uploadError) throw uploadError;
     const { data } = supabase.storage.from('covers').getPublicUrl(fileName);
     return data.publicUrl;
   };
 
-  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    try {
-      const url = await uploadToStorage(file);
-      setFormData({ ...formData, cover: url });
-      setSuccessMsg('封面已同步云端');
-    } catch (err: any) { setErrorMsg('上传失败: ' + err.message); }
-    finally { setIsUploading(false); }
-  };
-
-  const handleMultiUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, isCover: boolean) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
     setIsUploading(true);
     try {
-      const urls = await Promise.all(Array.from(files).map(f => uploadToStorage(f)));
-      setFormData(prev => ({ ...prev, images: [...(prev.images || []), ...urls] }));
-    } catch (err: any) { setErrorMsg('上传失败: ' + err.message); }
-    finally { setIsUploading(false); }
+      if (isCover) {
+        const url = await uploadToStorage(files[0]);
+        setFormData(prev => ({ ...prev, cover: url }));
+      } else {
+        const urls = await Promise.all(Array.from(files).map(uploadToStorage));
+        setFormData(prev => ({ ...prev, images: [...(prev.images || []), ...urls] }));
+      }
+    } catch (err: any) {
+      alert('上传失败: ' + err.message);
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaving || isUploading) return;
+    if (!formData.id || !formData.title || !formData.theme) {
+      alert('请完整填写必填项(编号、标题、细分主题)');
+      return;
+    }
     setIsSaving(true);
     try {
       if (isNew) await addProduct(formData as any);
       else await updateProduct(formData.id!, formData);
-      setSuccessMsg('保存成功');
-      setTimeout(() => navigate('/admin/products'), 1000);
-    } catch (err: any) { setErrorMsg(err.message); setIsSaving(false); }
-  };
-
-  const handleTechAdd = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (techInput.trim() && !formData.tech?.includes(techInput.trim())) {
-        setFormData({ ...formData, tech: [...(formData.tech || []), techInput.trim()] });
-        setTechInput('');
-      }
+      navigate('/admin/products');
+    } catch (err: any) {
+      alert('保存失败: ' + err.message);
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto pb-32 animate-in fade-in">
-      <div className="flex items-center gap-4 mb-8">
-        <button type="button" onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm"><ChevronLeft /></button>
-        <h1 className="text-2xl font-black">作品编辑控制台</h1>
+    <div className="p-4 md:p-8 max-w-3xl mx-auto pb-24 animate-in fade-in duration-300">
+      <div className="flex items-center gap-3 mb-8">
+        <button type="button" onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition-transform border border-slate-100">
+          <ChevronLeft size={20} />
+        </button>
+        <h1 className="text-2xl font-black text-slate-800">编辑基本信息</h1>
       </div>
 
-      {(errorMsg || successMsg) && (
-        <div className={cn("mb-6 p-4 rounded-xl font-bold", errorMsg ? "bg-red-50 text-red-500" : "bg-green-50 text-green-500")}>
-          {errorMsg || successMsg}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-10">
-        {/* 封面区 */}
-        <section className="space-y-4">
-          <label className="text-sm font-black text-slate-900">1. 作品封面 (自动同步至 Covers 桶)</label>
-          <div className="flex items-center gap-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-8">
+        
+        {/* 作品封面图 */}
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-slate-700">作品封面图 (建议4:3比例)</label>
+          <div className="flex items-start gap-6">
             <div 
               onClick={() => !isUploading && fileInputRef.current?.click()}
-              className="w-48 h-36 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl flex items-center justify-center cursor-pointer hover:bg-blue-50 relative overflow-hidden group"
+              className="w-48 h-36 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden cursor-pointer hover:border-blue-400 group relative flex items-center justify-center shrink-0 shadow-inner"
             >
-              {isUploading ? <Loader2 className="animate-spin text-blue-500" /> : 
-               formData.cover ? <img src={formData.cover} className="w-full h-full object-cover" /> : 
-               <div className="text-slate-400 text-center"><Plus /><span className="text-[10px] block font-bold">点击上传封面</span></div>}
+               {isUploading ? <Loader2 className="animate-spin text-blue-500" /> : 
+                formData.cover ? <img src={formData.cover} className="w-full h-full object-cover" /> :
+                <div className="text-center"><Plus size={32} className="text-slate-300 mx-auto" /><span className="text-[10px] font-bold text-slate-400">点击上传</span></div>
+               }
+               <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => handleUpload(e, true)} />
             </div>
-            <input type="file" ref={fileInputRef} className="hidden" onChange={handleCoverChange} accept="image/*" />
-            <div className="flex-1 text-xs text-slate-400">建议尺寸 800x600，上传后自动替换旧封面。</div>
+            <div className="flex-1 space-y-3">
+              <p className="text-[10px] text-slate-400 font-bold leading-relaxed">自动转为 Base64 存储，不占用外部服务器。<br/>或者您也可直接粘贴图片外链 URL:</p>
+              <div className="flex gap-2">
+                <input 
+                  type="text" value={formData.cover} 
+                  onChange={e => setFormData({ ...formData, cover: e.target.value })} 
+                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-xs bg-slate-50 outline-none focus:border-blue-500" placeholder="https://..." 
+                />
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition-colors">本地换图</button>
+              </div>
+              <button type="button" onClick={() => setFormData({...formData, cover: ''})} className="text-[10px] text-red-500 font-bold hover:underline">清除图片</button>
+            </div>
           </div>
-        </section>
+        </div>
 
-        {/* 预览图区 */}
-        <section className="space-y-4 pt-8 border-t border-slate-50">
-          <label className="text-sm font-black text-slate-900">2. 页面预览图 (可多选上传)</label>
+        {/* 页面预览图 */}
+        <div className="space-y-3 pt-6 border-t border-slate-50">
+          <label className="text-sm font-bold text-slate-700">页面预览图 (可上传多张，点击图可以预览)</label>
           <div className="flex flex-wrap gap-4">
             {formData.images?.map((img, idx) => (
-              <div key={idx} className="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 relative group">
+              <div key={idx} className="w-24 h-24 relative rounded-xl overflow-hidden border border-slate-200 group shadow-sm">
                 <img src={img} className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setFormData({...formData, images: formData.images?.filter((_, i) => i !== idx)})} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
+                <button type="button" onClick={() => setFormData({...formData, images: formData.images?.filter((_, i) => i !== idx)})} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 sm:opacity-0 group-hover:opacity-100 shadow-lg"><X size={12} /></button>
               </div>
             ))}
-            <div onClick={() => !isUploading && imagesInputRef.current?.click()} className="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-blue-50">
-               {isUploading ? <Loader2 className="animate-spin text-blue-400" /> : <Plus className="text-slate-300" />}
+            <div onClick={() => !isUploading && imagesInputRef.current?.click()} className="w-24 h-24 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-blue-400 group">
+              {isUploading ? <Loader2 className="animate-spin text-slate-400" /> : <Plus className="text-slate-300 group-hover:text-blue-400" />}
             </div>
-            <input type="file" multiple ref={imagesInputRef} className="hidden" onChange={handleMultiUpload} accept="image/*" />
           </div>
-        </section>
+          <input type="file" multiple ref={imagesInputRef} className="hidden" onChange={(e) => handleUpload(e, false)} />
+          <p className="text-[10px] text-slate-400 font-bold italic">这些图片将在详情页下方用于展示每一页的细节。</p>
+        </div>
 
-        {/* 销售与热门设置 */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-slate-50">
-           <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900">3. 销售状态</label>
-              <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as any})} className="w-full border-2 border-slate-100 p-4 rounded-2xl font-bold bg-white outline-none focus:border-blue-500">
-                 <option value="selling">🚀 还在热卖中</option>
-                 <option value="sold_out">⛔ 已经售罄了</option>
-              </select>
-           </div>
-           <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900">4. 推荐位</label>
-              <label className="flex items-center gap-4 p-4 border-2 border-slate-100 rounded-2xl cursor-pointer hover:bg-orange-50 transition-colors">
-                 <input type="checkbox" checked={formData.isHot} onChange={e => setFormData({...formData, isHot: e.target.checked})} className="w-6 h-6 accent-orange-500" />
-                 <span className="font-bold text-orange-600">设为【首页热门推荐】</span>
-              </label>
-           </div>
-        </section>
-
-        {/* 核心字段 */}
-        <section className="grid grid-cols-2 gap-4 pt-8">
-            <input required value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})} placeholder="唯一编号 (如 0012)" className="border-2 border-slate-100 p-4 rounded-2xl font-mono font-bold outline-none focus:border-blue-500" />
-            <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})} className="border-2 border-slate-100 p-4 rounded-2xl font-bold bg-white">
-                <option value="static">静态网页</option>
-                <option value="ps">PS设计稿</option>
-                <option value="figma">Figma设计稿</option>
+        {/* 编号与类型 */}
+        <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-50">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500">唯一编号 <span className="text-red-500">*</span></label>
+            <input disabled={!isNew} value={formData.id} onChange={e => setFormData({ ...formData, id: e.target.value })} className={cn("w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 outline-none font-mono font-bold", !isNew && "opacity-50")} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500">作品类型 <span className="text-red-500">*</span></label>
+            <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })} className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold bg-white cursor-pointer">
+              <option value="static">静态网页</option>
+              <option value="ps">PS设计稿</option>
+              <option value="figma">Figma设计稿</option>
             </select>
-            <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="作品完整标题" className="col-span-2 border-2 border-slate-100 p-4 rounded-2xl font-bold outline-none focus:border-blue-500" />
-        </section>
+          </div>
+        </div>
 
-        {/* 标签与描述 */}
-        <section className="space-y-4 pt-8 border-t border-slate-50">
-            <div className="flex flex-wrap gap-2">
-               {formData.tech?.map(t => <span key={t} className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">{t}<button type="button" onClick={() => setFormData({...formData, tech: formData.tech?.filter(x => x !== t)})}>&times;</button></span>)}
-            </div>
-            <input value={techInput} onChange={e => setTechInput(e.target.value)} onKeyDown={handleTechAdd} placeholder="输入技术标签后按回车" className="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500" />
-            <textarea rows={4} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="详细说明文案..." className="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 resize-none" />
-        </section>
+        {/* 完整标题 */}
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-500">完整标题 <span className="text-red-500">*</span></label>
+          <input value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 font-bold" placeholder="例如：杭州旅游主题网页" />
+        </div>
 
-        {/* 底部保存条 */}
-        <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-md p-4 border-t border-slate-100 flex justify-end gap-4 px-8 z-50">
-           <button type="button" onClick={() => navigate(-1)} className="px-8 py-4 font-bold text-slate-400 hover:text-slate-600 transition-colors">取消</button>
-           <button type="submit" disabled={isSaving || isUploading} className="bg-slate-900 text-white px-16 py-4 rounded-2xl font-black shadow-2xl active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3">
-              {(isSaving || isUploading) ? <Loader2 className="animate-spin" /> : <Save />}
-              {isUploading ? '正在极速同步云端图片...' : isNew ? '立即发布作品' : '保存全部更改'}
-           </button>
+        {/* 数量与分类 */}
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500">页面数量</label>
+            <input type="number" value={formData.pages} onChange={e => setFormData({ ...formData, pages: parseInt(e.target.value) || 1 })} className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold bg-slate-50" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500">细分主题 <span className="text-red-500">*</span></label>
+            <input value={formData.theme} onChange={e => setFormData({ ...formData, theme: e.target.value })} className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold" placeholder="例如：城市" />
+          </div>
+        </div>
+
+        {/* 库存管理 */}
+        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col gap-4">
+           <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+             <span>基础库存量</span>
+             <span className="text-[10px] text-slate-400">目前余：{getBaseInventory(formData as any) - (formData.soldTo?.length || 0)}</span>
+           </div>
+           <div className="flex gap-4 items-center">
+             <input type="number" value={formData.baseInventory || ''} onChange={e => setFormData({ ...formData, baseInventory: e.target.value === '' ? undefined : parseInt(e.target.value) })} className="flex-1 border border-slate-200 rounded-xl px-4 py-3 font-bold bg-white text-sm" placeholder="不填则默认为 900+ 随机数" />
+             <p className="flex-1 text-[10px] leading-relaxed text-slate-400 font-bold italic">不输入时系统会自动生成一个 900+ 随机库存，输入后以您输入的数量为基准。售出记录会自动扣除。</p>
+           </div>
+        </div>
+
+        {/* 状态与推荐 */}
+        <div className="flex gap-4 pt-4">
+          <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })} className="flex-1 border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold bg-white cursor-pointer shadow-sm">
+            <option value="selling">🚀 在售中</option>
+            <option value="sold_out">⛔ 已售罄</option>
+          </select>
+          <label className={cn("flex-1 flex items-center justify-center gap-3 border rounded-xl cursor-pointer transition-all", formData.isHot ? "bg-orange-50 border-orange-200 text-orange-600" : "bg-white border-slate-200 text-slate-500")}>
+            <input type="checkbox" checked={formData.isHot} onChange={e => setFormData({ ...formData, isHot: e.target.checked })} className="size-5 accent-orange-500" />
+            <span className="text-sm font-black">设为主页【热门推荐】</span>
+          </label>
+          {formData.type === 'figma' && (
+            <label className={cn("flex-1 flex items-center justify-center gap-3 border rounded-xl cursor-pointer transition-all", formData.hasInteraction ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-slate-200 text-slate-500")}>
+              <input type="checkbox" checked={formData.hasInteraction} onChange={e => setFormData({ ...formData, hasInteraction: e.target.checked })} className="size-5 accent-blue-500" />
+              <span className="text-sm font-black">包含交互</span>
+            </label>
+          )}
+        </div>
+
+        {/* 技术标签 */}
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-500">技术标签 (输入后按回车添加)</label>
+          <div className="flex flex-wrap gap-2 mb-3 min-h-[32px]">
+            {formData.tech?.map(t => (
+              <span key={t} className="bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest flex items-center gap-2">
+                {t} <button type="button" onClick={() => setFormData({...formData, tech: formData.tech?.filter(x => x !== t)})} className="hover:text-red-400"><X size={10} /></button>
+              </span>
+            ))}
+          </div>
+          <input value={techInput} onChange={e => setTechInput(e.target.value)} onKeyDown={e => {
+            if(e.key === 'Enter') {
+              e.preventDefault();
+              if(techInput.trim() && !formData.tech?.includes(techInput.trim())) {
+                setFormData({...formData, tech: [...(formData.tech || []), techInput.trim()]});
+                setTechInput('');
+              }
+            }
+          }} className="w-full border border-slate-100 rounded-xl px-4 py-3 text-xs bg-slate-50 font-bold outline-none focus:border-blue-500 transition-all placeholder:text-slate-300" placeholder="例如 HTML, CSS 等..." />
+        </div>
+
+        {/* 文案说明 */}
+        <div className="space-y-2 pt-4">
+          <label className="text-xs font-bold text-slate-500">详细描述文案</label>
+          <textarea rows={8} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full border border-slate-100 rounded-2xl px-5 py-4 text-xs font-medium bg-slate-50 outline-none leading-relaxed resize-none focus:bg-white focus:border-blue-200 transition-all" placeholder="输入功能卖点、技术说明等..." />
+        </div>
+
+        {/* 保存按钮 */}
+        <div className="pt-8">
+          <button type="submit" disabled={isSaving || isUploading} className="w-full bg-blue-600 text-white py-4 rounded-xl font-black shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+            保存修改内容
+          </button>
         </div>
       </form>
     </div>
