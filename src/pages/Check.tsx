@@ -198,8 +198,8 @@ export default function Check() {
                          className="w-full bg-white border-none rounded-xl py-4 px-5 text-sm font-bold text-slate-800 shadow-sm placeholder-slate-300 focus:ring-2 focus:ring-[#FFB6C1] transition-shadow outline-none"
                        >
                          <option value="all">不限保真度</option>
-                         <option value="high">高保真 (含交互)</option>
-                         <option value="low">低保真 (无交互)</option>
+                         <option value="high">高保真</option>
+                         <option value="low">低保真</option>
                        </select>
                     </div>
                   )}
@@ -261,7 +261,7 @@ export default function Check() {
                 
                 {/* 底部还有个兜底的复制按钮给不听劝的用户 */}
                 <div className="mt-8 text-center pt-8 border-t border-rose-100 border-dashed">
-                  <p className="text-slate-400 font-bold text-xs mb-3">如果不想买了，或者想继续咨询客服？</p>
+                  <p className="text-slate-400 font-bold text-xs mb-3">想继续咨询客服可点击按钮直接复制哦</p>
                   <button onClick={handleCopy} className="bg-white border-2 border-slate-100 hover:bg-slate-50 text-slate-600 font-extrabold py-3 px-6 rounded-2xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2 mx-auto">
                      <Copy size={16} /> 复制查重信息发给客服
                   </button>
