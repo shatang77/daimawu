@@ -217,7 +217,7 @@ export default function Detail() {
             className="w-full bg-gradient-to-r from-[#FFB6C1] to-[#FF8FAB] text-white font-black py-4 rounded-3xl shadow-[0_10px_30px_rgb(255,182,193,0.6)] active:scale-95 transition-all text-lg relative overflow-hidden flex items-center justify-center gap-2 group"
           >
             <div className="absolute inset-0 bg-white/20 w-full translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite] skew-x-12"></div>
-            直接复制商品信息给闲鱼客服
+            直接复制商品信息给客服
           </button>
         </div>
       </div>
